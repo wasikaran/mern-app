@@ -17,9 +17,11 @@ router.post('/CreateUser', [
   body('email', 'Invalid Email').isEmail(),
   body('password', 'Password must be at least 5 characters').isLength({ min: 5 }),
 ], async (req, res) => {
+  let success = false;
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ success, errors: errors.array() });
   }
 
   const { name, email, password } = req.body;
@@ -27,7 +29,7 @@ router.post('/CreateUser', [
   try {
     let existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: "Email is already registered" });
+      return res.status(400).json({ success, error: "Email is already registered" });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -46,11 +48,12 @@ router.post('/CreateUser', [
     };
 
     const authToken = jwt.sign(data, JWT_SECRET);
-    return res.status(201).json({ authToken });
+    success = true; // ✅ FIXED: no `let` here
+    return res.status(201).json({ success, authToken });
 
   } catch (error) {
     console.error("CreateUser Error:", error.message);
-    return res.status(500).send("Internal Server Error");
+    return res.status(500).send({ success, error: "Internal Server Error" });
   }
 });
 
@@ -61,9 +64,11 @@ router.post('/login', [
   body('email', 'Invalid Email').isEmail(),
   body('password', 'Password is required').exists(),
 ], async (req, res) => {
+  let success = false;
+
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ success, errors: errors.array() });
   }
 
   const { email, password } = req.body;
@@ -71,12 +76,12 @@ router.post('/login', [
   try {
     const existingUser = await User.findOne({ email });
     if (!existingUser) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.status(400).json({ success, error: "Invalid email or password" });
     }
 
     const passwordMatch = await bcrypt.compare(password, existingUser.password);
     if (!passwordMatch) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.status(400).json({ success, error: "Invalid email or password" });
     }
 
     const data = {
@@ -85,14 +90,16 @@ router.post('/login', [
       }
     };
 
-    const authToken = jwt.sign(data, JWT_SECRET);
-    return res.json({ authToken });
+const authToken = jwt.sign(data, JWT_SECRET);
+success = true; // ✅ Correct assignment
+return res.json({ success, authToken }); // ✅ Both keys in response
 
   } catch (error) {
     console.error("Login Error:", error.message);
-    return res.status(500).send("Internal Server Error");
+    return res.status(500).json({ success, error: "Internal Server Error" });
   }
 });
+
 
 
 //ROUTE GET USERS DETAILS

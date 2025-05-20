@@ -5,7 +5,7 @@ const fetchuser = require('../middleware/fetchuser');
 const { body, validationResult } = require('express-validator');
 
 // ✅ Route: Get all notes of a user
-router.post('/userAllNote', fetchuser, async (req, res) => {
+router.get('/userAllNote', fetchuser, async (req, res) => {
   try {
     const notes = await Notes.find({ user: req.user.id });
     res.json(notes);
@@ -81,7 +81,7 @@ router.put('/updateNote/:id', fetchuser, async (req, res) => {
 router.delete('/deleteNote/:id', fetchuser, async (req, res) => {
   try {
     let note = await Notes.findById(req.params.id);
-    if (!note) return res.status(404).send("Note not found");
+    if (!note) return res.status(404).send({error: "Note not found"});
 
     if (note.user.toString() !== req.user.id)
       return res.status(401).send("Unauthorized");

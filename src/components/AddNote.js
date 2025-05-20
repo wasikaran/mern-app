@@ -59,7 +59,7 @@ const AddNotes = () => {
                             placeholder="Enter tags"
                         />
                     </div>
-                    <button type="submit" onClick={handleClick} className="btn btn-primary">
+                    <button disabled={note.title.length < 4 || note.description.length < 5} type="submit" onClick={handleClick} className="btn btn-primary">
                         Submit
                     </button>
                 </form>
